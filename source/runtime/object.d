@@ -344,6 +344,22 @@ struct ValType
         assert (!that.shapeKnown || !that.fptrKnown);
         assert (!that.fptrKnown || that.fptr);
 
+
+
+
+        if (that.tag !is Tag.CLOSURE && that.tag !is Tag.FUNPTR)
+        {
+            that.tag = cast(Tag)0;
+            that.tagKnown = false;
+            that.fptr = null;
+            that.fptrKnown = false;
+        }
+
+
+
+
+
+
         return that;
     }
 }

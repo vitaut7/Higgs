@@ -3712,12 +3712,21 @@ void gen_obj_set_prop(
     // Get the type for the property value
     auto valType = st.getType(propVal).propType;
 
+
+    // Note: added for interprocedural BBV without typed shapes
+    assert (!(valType.tagKnown && valType.tag !is Tag.CLOSURE));
+
+    // Note: commenting out for interprocedural BBV without typed shapes
+    /*
     // If we type of the property value is unknown, use the slow path
     if (!valType.tagKnown && !opts.shape_notagspec)
     {
         //as.printStr("val type unknown!");
         return gen_slow_path(ver, st, instr, as);
     }
+    */
+
+
 
     // Get the object and defining shapes
     auto objShape = st.getShape(objVal);
@@ -3823,6 +3832,13 @@ void gen_obj_set_prop(
         // If the value type doesn't match the shape type
         if (!valType.isSubType(defShape.type))
         {
+            writeln(defShape.type.tagKnown, " ", defShape.type.shapeKnown, " ", defShape.type.fptrKnown);
+
+            /*
+            writeln("flipping from: ", defShape.type);
+            writeln("           to: ", valType);
+            */
+
             // Create a new shape for the property
             objShape = objShape.defProp(
                 propName,
