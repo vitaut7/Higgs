@@ -159,6 +159,7 @@ TODO: try reducing dispatch depth for interp BBV without typed shapes
 TODO: evaluate perf of interp BBV without typed shapes
 - reuse ECOOP paper source to test it
 - look at perf only first?
+- Use notypedshapes checkout
 --noentryspec --noretspec
 --noretspec
 
@@ -168,14 +169,15 @@ Caught segmentation fault
 vm.curInstr: $0 = get_asm_str $3
 - Fix on master first? add assert comment
 
-TODO: copy out interp BBV code, put on special branch, "notypedshapes"
+
+
+
+
+
+
+[DONE] TODO: copy out interp BBV code, put on special branch, "notypedshapes"
 git checkout -b "notypedshapes"
 git commit -a
-
-
-
-
-
 
 [DONE] FIXME: too many shape flips without typed shapes
 - uknown doesn't show up as subtype of unknown!
