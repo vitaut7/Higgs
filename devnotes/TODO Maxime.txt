@@ -123,6 +123,7 @@ Meeting 2015-04-14:
   - can't realistically guarantee codegen is the same everywhere but the benchmark fn
   - explain in analysis if results turn out odd? microbenchmark
     - interesting for validation, not so much for timing
+- NEXT: take a break, finish up ECOOP paper, submit camera-ready version! ***
 
 TODO: try maxtypes=N
 - Need capture_shape/tag duplication first, otherwise this will kill perf
@@ -146,8 +147,9 @@ TODO: work on auto-duplicating capture_shape, Marc says ok
     }
     else
     {
-        // Whole thing until merge is duplicated
-        // Liveness, slots...
+        // Whole capture shape structure until merge is duplicated
+
+        // Liveness info, stack slots?
         // Could we just change the IR to point to the same subgraph?
         // No, because we want a *new version*
 
@@ -168,18 +170,9 @@ TODO: work on auto-duplicating capture_shape, Marc says ok
         $ir_duplicate();
     }
 
-TODO: limited IR subgraph copy mechanism for auto-duplicating capture instrs
-TODO: way to update LiveInfo
-- can start by trying to re-run with existing data?
-  - get that working right first
-- how do we cope with new instrs not in existing data?
-
 TODO: string code point issue, look into it
+https://github.com/higgsjs/Higgs/issues/184
 - Don't need to fix it necessarily, but make headway!
-
-Tell Tommy Marc suggests going to NYC during June
-- Article deadline June 7th
-- Cheaper plane tickets... Set time now
 
 Blog post: Versioning is Not Cloning
 
@@ -200,6 +193,36 @@ TODO: implement basic meta stat test system
   - obj lit usage patterns that should have no shape tests whatsoever
   - init with --nostdlib should have no shape tests, no perf degradation
 
+Backup plan: inline the recursive structure
+- could possibly use eval to generate the recursive getprop/setprop structure?
+  - have to do it in D! no access to JS primitives
+- this is an ugly solution, try to go for duplication
+  - self-modifying IR is important to understand, be patient
+
+TODO: way to update LiveInfo
+- can start by trying to re-run with existing data?
+  - get that working right first
+- how do we cope with new instrs not in existing data?
+
+TODO: limited IR subgraph copy mechanism for auto-duplicating capture instrs
+
+TODO: sketch/hack something to duplicate the IR for capture_shape and its sub-branches
+- Start from an $ir_dup_capture() IR instruction
+  - needs to identify its surroundings
+    - it's on the else branch
+    - find predecessor, if-test, where duplication starts
+    - find successor, this is the merge, where duplication stops
+    - identify all nodes in subtree to be copied
+- Once IR subtree copy is done, we update the liveness info
+  - Can start by rerunning the whole thing, KISS at first
+- All of this happens while we're compiling $ir_dup_capture
+  - We're not generating any code for dup capture itself
+  - We basically hijack things so that the new IR gets compiled right after?
+  - dup_capture jumps or "falls through" to newly generated IR blocks
+
+TODO: write/sketch explanation of typed shapes in typed shapes paper
+
+test and commit
 
 
 
@@ -208,6 +231,19 @@ TODO: implement basic meta stat test system
 
 
 
+
+
+
+
+[DONE] TODO: capture_shape_2 has control flow directions inverted
+
+[DONE] TODO: skeletons for $ir_capture_shape_2() and $ir_dup_capture() instructions
+- Slowly rework starting from objSetProp
+- Get the basics in place first
+
+[DONE] TODO: sketch code in objGetProp
+
+[DONE] TODO: switch to new branch, dupcapture
 
 [DONE] TODO: establish *which shapes* cause blowup in SplayTree_prototype_splay_(84008B)
 - Node have left, right, node, value

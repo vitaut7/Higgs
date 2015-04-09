@@ -409,22 +409,6 @@ PhiNode inlineCall(IRInstr callSite, IRFunction callee)
                 }
             }
 
-            /*
-            // If this is a call instruction
-            if (newInstr.opcode.isCall)
-            {
-                // Add the callee function to the list of
-                // inlined functions at this call site
-                caller.inlineMap[newInstr] ~= callee.inlineMap.get(oldInstr, []) ~ callee;
-
-                // Copy the call profiles from the callee
-                caller.callCounts[newInstr] = callee.callCounts.get(
-                    oldInstr,
-                    uint64_t[IRFunction].init
-                );
-            }
-            */
-
             // If this is a return instruction
             if (newInstr.opcode == &RET)
             {

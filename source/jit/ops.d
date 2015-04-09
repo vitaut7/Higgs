@@ -3136,6 +3136,301 @@ void gen_capture_shape(
     );
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/// Inputs: obj, propName
+/// Capture the shape of the object
+/// This shifts us to a different version where the obj shape is known
+/// Implements a dynamic shape dispatch/guard mechanism
+void gen_capture_shape_2(
+    BlockVersion ver,
+    CodeGenState st,
+    IRInstr instr,
+    CodeBlock as
+)
+{
+    assert (instr.getTarget(0).args.length is 0);
+
+    // Get the object and shape argument values
+    auto objVal = cast(IRDstValue)instr.getArg(0);
+    auto shapeIdxVal = cast(IRDstValue)instr.getArg(1);
+    assert (objVal !is null);
+    assert (shapeIdxVal !is null);
+
+    // Get type information about the object argument
+    ValType objType = st.getType(objVal);
+
+    // If the shape is marked as known
+    if (objType.shapeKnown)
+    {
+        // Increment the count of known shape instances
+        as.incStatCnt(&stats.numShapeKnown, scrRegs[0]);
+
+        // Jump directly to the true successor block
+        // No need to dynamically test the shape
+        return gen_jump(ver, st, instr, as);
+    }
+
+    // Increment the count of shape tests
+    as.incStatCnt(&stats.numShapeTests, scrRegs[0]);
+
+    // Observe the current shape index at compilation time
+    assert (shapeIdxVal.block !is instr.block);
+    auto curShapeIdx = vm.getWord(shapeIdxVal.outSlot).uint32Val;
+
+    // Get the shape index operand
+    auto shapeIdxOpnd = st.getWordOpnd(as, instr, 1, 32);
+
+    // Compare the shape index operand with the observed shape index
+    as.cmp(shapeIdxOpnd, X86Opnd(curShapeIdx));
+
+    // On the recursive branch, no information is gained
+    auto branchF = getBranchEdge(instr.getTarget(0), st, false);
+
+    // Mark the object shape as known on the true branch,
+    // and queue this branch for immediate compilation (fall through)
+    auto trueSt = new CodeGenState(st);
+    trueSt.setShape(objVal, vm.objShapes[curShapeIdx]);
+    auto branchT = getBranchEdge(instr.getTarget(1), trueSt, true);
+
+    // Generate the branch code
+    ver.genBranch(
+        as,
+        branchT,
+        branchF,
+        delegate void(
+            CodeBlock as,
+            BlockVersion block,
+            CodeFragment target0,
+            CodeFragment target1,
+            BranchShape shape
+        )
+        {
+            final switch (shape)
+            {
+                case BranchShape.NEXT0:
+                jne32Ref(as, vm, block, target1, 1);
+                break;
+
+                case BranchShape.NEXT1:
+                je32Ref(as, vm, block, target0, 0);
+                break;
+
+                case BranchShape.DEFAULT:
+                je32Ref(as, vm, block, target0, 0);
+                jmp32Ref(as, vm, block, target1, 1);
+            }
+        }
+    );
+}
+
+/// Duplicate/extend the capture_shape or capture_tag structure
+/// This is a pseudo-call instruction
+void gen_dup_capture(
+    BlockVersion ver,
+    CodeGenState st,
+    IRInstr instr,
+    CodeBlock as
+)
+{
+    // This block should contain dup_capture only, no phi nodes
+    // We're on the else branch of the capture structure
+    auto thisBlock = instr.block;
+    assert (thisBlock.firstPhi is null);
+    assert (thisBlock.firstInstr);
+    assert (thisBlock.firstInstr is thisBlock.lastInstr);
+    assert (thisBlock.numIncoming is 1);
+
+    // Get the predecessor block, where duplication will start
+    // This is the block containing the capture_xx instruction
+    auto startBlock = thisBlock.getIncoming(0).branch.block;
+    assert (startBlock.firstInstr is startBlock.lastInstr);
+
+    // Identify the merge block (successor), this is where duplication stops
+    assert (instr.getTarget(0) !is null);
+    auto endBlock = instr.getTarget(0).target;
+
+
+
+
+
+
+
+    // Map of callee blocks to copies
+    IRBlock[IRBlock] blockMap;
+
+    void traverse(IRBlock block)
+    {
+        // If this block was already processed, stop
+        if (block in blockMap)
+            return;
+
+        // Copy the block
+        auto newBlock = instr.block.fun.newBlock(block.getName);
+        blockMap[block] = newBlock;
+
+        assert (block.firstPhi is null);
+
+        // For each instruction
+        for (auto instr = block.firstInstr; instr !is null; instr = instr.next)
+        {
+            // Create a new instruction (copy)
+            /*auto newInstr =*/ newBlock.addInstr(
+                new IRInstr(instr.opcode, instr.numArgs)
+            );
+            //valMap[instr] = newInstr;
+        }
+
+        // Process successors
+        auto branch = block.lastInstr;
+        for (size_t tIdx = 0; tIdx < branch.MAX_TARGETS; ++tIdx)
+            traverse(branch.getTarget(tIdx).target);
+    }
+
+
+
+
+
+    // TODO: process instructions in the blocks and copies, as in ir/inlining.d
+    // simplification is that only propVal value is copied? try that first
+
+
+
+
+    // For each block
+    foreach (oldBlock, newBlock; blockMap)
+    {
+        // For each instruction
+        for (auto oldInstr = oldBlock.firstInstr; oldInstr !is null; oldInstr = oldInstr.next)
+        {
+            /*// Get the corresponding copied instruction
+            auto newInstr = cast(IRInstr)valMap.get(oldInstr, null);
+            assert (newInstr !is null);
+            assert (newInstr.block is newBlock || newInstr is caller.globalVal);
+
+            if (oldInstr.srcPos)
+                newInstr.srcPos = callSite.srcPos;
+
+            // Translate the instruction arguments
+            for (size_t aIdx = 0; aIdx < oldInstr.numArgs; ++aIdx)
+            {
+                auto arg = oldInstr.getArg(aIdx);
+                assert (arg in valMap || cast(IRDstValue)arg is null);
+                auto newArg = valMap.get(arg, arg);
+                newInstr.setArg(aIdx, newArg);
+            }*/
+
+            /*// Translate the branch targets
+            for (size_t tIdx = 0; tIdx < oldInstr.MAX_TARGETS; ++tIdx)
+            {
+                auto desc = oldInstr.getTarget(tIdx);
+                if (desc is null)
+                    continue;
+
+                auto newTarget = blockMap[desc.target];
+                auto newBranch = newInstr.setTarget(tIdx, newTarget);
+
+                foreach (arg; desc.args)
+                {
+                    auto newPhi = cast(PhiNode)valMap.get(arg.owner, null);
+                    auto newArg = valMap.get(arg.value, arg.value);
+                    newBranch.setPhiArg(newPhi, newArg);
+                }
+            }*/
+
+            /*// If this is a return instruction
+            if (newInstr.opcode == &RET)
+            {
+                // Get the return value
+                auto retVal = newInstr.getArg(0);
+
+                // Remove the return instruction
+                newBlock.delInstr(newInstr);
+
+                // Jump to the merge block
+                auto jump = newBlock.addInstr(new IRInstr(&JUMP));
+                auto desc = jump.setTarget(0, mergeBlock);
+
+                // Set the return phi argument
+                desc.setPhiArg(retPhi, retVal);
+            }*/
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+    // TODO: set successor of thisBlock to first duplicated block
+    // Note: this block remains in existence, now jumps to first duplicated
+    // block instead of merge block
+
+
+
+
+
+
+
+
+
+    // Once IR subtree copy is done, we update the liveness info
+    // - Can start by rerunning the whole thing, KISS at first
+
+
+
+
+
+
+    // Jump directly to the successor block
+    // - We're not generating any code for dup capture itself
+    // - We basically hijack BBV so that the new IR gets generated
+    // - dup_capture jumps or "falls through" to newly generated IR blocks
+    return gen_jump(ver, st, instr, as);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 void gen_clear_shape(
     BlockVersion ver,
     CodeGenState st,

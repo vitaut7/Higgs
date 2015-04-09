@@ -2638,9 +2638,58 @@ Set a property on an object using a string as key
 */
 function $rt_objSetProp(obj, propStr, val)
 {
-    // Capture the object shape
+
+
+
+
+
+
+    /*
+    // Read the object shape
     var shapeIdx = $ir_read_shape_idx(obj);
     if ($ir_break());
+
+    // Capture the object shape
+    if ($ir_capture_shape_2(obj, shapeIdx))
+    {
+        // Capture the type tag of the value
+        if ($ir_capture_tag(val))
+        if ($ir_capture_tag(val))
+        if ($ir_capture_tag(val))
+        if ($ir_capture_tag(val))
+        if ($ir_capture_tag(val))
+        if ($ir_capture_tag(val))
+        if ($ir_capture_tag(val))
+        if ($ir_capture_tag(val));
+
+        // If the property value can be set directly
+        if ($ir_obj_set_prop(obj, propStr, val))
+        {
+            // If shapes are not to be propagated, clear shape information
+            $ir_clear_shape(obj);
+
+            // We are done
+            return;
+        }
+    }
+    else
+    {
+        // Duplicate/extend the shape capture structure
+        $ir_dup_capture();
+    }
+    */
+
+
+
+
+
+
+
+    // Read the object shape
+    var shapeIdx = $ir_read_shape_idx(obj);
+    if ($ir_break());
+
+    // Capture the object shape
     if ($ir_capture_shape(obj, shapeIdx))
     if ($ir_capture_shape(obj, shapeIdx))
     if ($ir_capture_shape(obj, shapeIdx))
@@ -2686,6 +2735,19 @@ function $rt_objSetProp(obj, propStr, val)
         // We are done
         return;
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     // If shapes are not to be propagated, clear shape information
     $ir_clear_shape(obj);
