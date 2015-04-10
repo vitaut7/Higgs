@@ -3136,23 +3136,6 @@ void gen_capture_shape(
     );
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /// Inputs: obj, propName
 /// Capture the shape of the object
 /// This shifts us to a different version where the obj shape is known
@@ -3248,6 +3231,8 @@ void gen_dup_capture(
     CodeBlock as
 )
 {
+    auto fun = instr.block.fun;
+
     // This block should contain dup_capture only, no phi nodes
     // We're on the else branch of the capture structure
     auto thisBlock = instr.block;
@@ -3265,15 +3250,13 @@ void gen_dup_capture(
     assert (instr.getTarget(0) !is null);
     auto endBlock = instr.getTarget(0).target;
 
-
-
-
-
-
-
     // Map of callee blocks to copies
     IRBlock[IRBlock] blockMap;
 
+    // Map of callee instructions and phi nodes to copies
+    IRValue[IRValue] valMap;
+
+    /// Function to traverse the blocks to copy
     void traverse(IRBlock block)
     {
         // If this block was already processed, stop
@@ -3281,7 +3264,7 @@ void gen_dup_capture(
             return;
 
         // Copy the block
-        auto newBlock = instr.block.fun.newBlock(block.getName);
+        auto newBlock = fun.newBlock(block.getName);
         blockMap[block] = newBlock;
 
         assert (block.firstPhi is null);
@@ -3290,41 +3273,27 @@ void gen_dup_capture(
         for (auto instr = block.firstInstr; instr !is null; instr = instr.next)
         {
             // Create a new instruction (copy)
-            /*auto newInstr =*/ newBlock.addInstr(
+            auto newInstr = newBlock.addInstr(
                 new IRInstr(instr.opcode, instr.numArgs)
             );
-            //valMap[instr] = newInstr;
+            valMap[instr] = newInstr;
         }
 
-        // Process successors
+        // Process block successors
         auto branch = block.lastInstr;
         for (size_t tIdx = 0; tIdx < branch.MAX_TARGETS; ++tIdx)
             traverse(branch.getTarget(tIdx).target);
     }
 
-
-
-
-
-    // TODO: process instructions in the blocks and copies, as in ir/inlining.d
-    // simplification is that only propVal value is copied? try that first
-
-
-
-
-    // For each block
+    // Process the copied instructions
     foreach (oldBlock, newBlock; blockMap)
     {
-        // For each instruction
         for (auto oldInstr = oldBlock.firstInstr; oldInstr !is null; oldInstr = oldInstr.next)
         {
-            /*// Get the corresponding copied instruction
             auto newInstr = cast(IRInstr)valMap.get(oldInstr, null);
-            assert (newInstr !is null);
-            assert (newInstr.block is newBlock || newInstr is caller.globalVal);
 
-            if (oldInstr.srcPos)
-                newInstr.srcPos = callSite.srcPos;
+            newInstr.outSlot = oldInstr.outSlot;
+            newInstr.srcPos = oldInstr.srcPos;
 
             // Translate the instruction arguments
             for (size_t aIdx = 0; aIdx < oldInstr.numArgs; ++aIdx)
@@ -3333,60 +3302,29 @@ void gen_dup_capture(
                 assert (arg in valMap || cast(IRDstValue)arg is null);
                 auto newArg = valMap.get(arg, arg);
                 newInstr.setArg(aIdx, newArg);
-            }*/
+            }
 
-            /*// Translate the branch targets
+            // Translate the branch targets
             for (size_t tIdx = 0; tIdx < oldInstr.MAX_TARGETS; ++tIdx)
             {
                 auto desc = oldInstr.getTarget(tIdx);
                 if (desc is null)
                     continue;
 
+                // FIXME: use blockMap.get, not all blocks duped
                 auto newTarget = blockMap[desc.target];
                 auto newBranch = newInstr.setTarget(tIdx, newTarget);
 
-                foreach (arg; desc.args)
-                {
-                    auto newPhi = cast(PhiNode)valMap.get(arg.owner, null);
-                    auto newArg = valMap.get(arg.value, arg.value);
-                    newBranch.setPhiArg(newPhi, newArg);
-                }
-            }*/
-
-            /*// If this is a return instruction
-            if (newInstr.opcode == &RET)
-            {
-                // Get the return value
-                auto retVal = newInstr.getArg(0);
-
-                // Remove the return instruction
-                newBlock.delInstr(newInstr);
-
-                // Jump to the merge block
-                auto jump = newBlock.addInstr(new IRInstr(&JUMP));
-                auto desc = jump.setTarget(0, mergeBlock);
-
-                // Set the return phi argument
-                desc.setPhiArg(retPhi, retVal);
-            }*/
+                assert (desc.args.length is 0);
+            }
         }
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-    // TODO: set successor of thisBlock to first duplicated block
+    // Set the successor of thisBlock to the first duplicated block
     // Note: this block remains in existence, now jumps to first duplicated
     // block instead of merge block
+    assert (instr.getTarget(0) && instr.getTarget(0).args.length is 0);
+    /*auto newBranch =*/ instr.setTarget(0, blockMap[startBlock]);
 
 
 
@@ -3396,8 +3334,18 @@ void gen_dup_capture(
 
 
 
-    // Once IR subtree copy is done, we update the liveness info
+
+
+
+
+
+    // TODO: find way to incrementally update LiveInfo
+    // Once IR subtree copy is done, we update the LiveInfo
     // - Can start by rerunning the whole thing, KISS at first
+    fun.liveInfo = new LiveInfo(fun);
+
+
+
 
 
 
@@ -3410,26 +3358,6 @@ void gen_dup_capture(
     // - dup_capture jumps or "falls through" to newly generated IR blocks
     return gen_jump(ver, st, instr, as);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 void gen_clear_shape(
     BlockVersion ver,

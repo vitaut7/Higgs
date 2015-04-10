@@ -589,23 +589,8 @@ IRFunction astToIR(FunExpr ast, IRFunction fun = null)
         fun.typeInfo = new TypeProp(fun, fun.liveInfo);
     }
 
-    /*
-    version (release)
-    {
-        fun.typeInfo = new TypeProp(fun, fun.liveInfo);
-    }
-    else
-    {
-        if (opts.typeprop)
-            fun.typeInfo = new TypeProp(fun, fun.liveInfo);
-    }
-    */
-
     // Allocate stack slots for the IR instructions
     allocSlots(fun);
-
-    //writeln("compiled fn:");
-    //writeln(fun.toString());
 
     // Return the IR function object
     return fun;

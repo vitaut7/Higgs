@@ -174,8 +174,6 @@ TODO: string code point issue, look into it
 https://github.com/higgsjs/Higgs/issues/184
 - Don't need to fix it necessarily, but make headway!
 
-Blog post: Versioning is Not Cloning
-
 TODO: implement basic meta stat test system
 - run new instance of Higgs with pipe, run microbenchmark, get result
   - good to dogfood Higgs pipes and such
@@ -204,9 +202,21 @@ TODO: way to update LiveInfo
   - get that working right first
 - how do we cope with new instrs not in existing data?
 
-TODO: limited IR subgraph copy mechanism for auto-duplicating capture instrs
+TODO: write/sketch explanation of typed shapes in typed shapes paper
 
-TODO: sketch/hack something to duplicate the IR for capture_shape and its sub-branches
+TODO: test dup_capture in objSetProp
+- It's OK if it doesn't work for a while!
+
+Blog post: PhD Musings - Versioning is Not Cloning
+- Short and sweet, KISS, musings
+
+TODO: in paper graph num shape tests with and without typed shapes
+- also column for num type tests with and without, same scale, not relative
+  - order of magnitude is similar
+
+TODO: move dupcapture into own folder, not dev-maxime
+
+TODO: limited IR subgraph copy mechanism for auto-duplicating capture instrs
 - Start from an $ir_dup_capture() IR instruction
   - needs to identify its surroundings
     - it's on the else branch
@@ -220,9 +230,6 @@ TODO: sketch/hack something to duplicate the IR for capture_shape and its sub-br
   - We basically hijack things so that the new IR gets compiled right after?
   - dup_capture jumps or "falls through" to newly generated IR blocks
 
-TODO: write/sketch explanation of typed shapes in typed shapes paper
-
-test and commit
 
 
 
