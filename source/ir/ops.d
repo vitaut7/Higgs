@@ -299,7 +299,7 @@ Opcode CAPTURE_SHAPE = { "capture_shape", false, [OpArg.LOCAL, OpArg.LOCAL], &ge
 Opcode CAPTURE_SHAPE_2 = { "capture_shape_2", false, [OpArg.LOCAL, OpArg.LOCAL], &gen_capture_shape_2, OpInfo.BRANCH };
 
 /// Duplicate/extend the capture_shape or capture_tag structure
-Opcode DUP_CAPTURE = { "dup_capture", false, [], &gen_dup_capture, OpInfo.MAY_GC | OpInfo.IMPURE | OpInfo.CALL };
+Opcode DUP_CAPTURE = { "dup_capture", false, [], &gen_dup_capture, OpInfo.MAY_GC | OpInfo.IMPURE | OpInfo.BRANCH | OpInfo.CALL };
 
 
 

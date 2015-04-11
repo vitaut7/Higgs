@@ -2643,8 +2643,6 @@ function $rt_objSetProp(obj, propStr, val)
 
 
 
-
-    /*
     // Read the object shape
     var shapeIdx = $ir_read_shape_idx(obj);
     if ($ir_break());
@@ -2677,7 +2675,6 @@ function $rt_objSetProp(obj, propStr, val)
         // Duplicate/extend the shape capture structure
         $ir_dup_capture();
     }
-    */
 
 
 
@@ -2685,6 +2682,9 @@ function $rt_objSetProp(obj, propStr, val)
 
 
 
+
+
+    /*
     // Read the object shape
     var shapeIdx = $ir_read_shape_idx(obj);
     if ($ir_break());
@@ -2735,7 +2735,7 @@ function $rt_objSetProp(obj, propStr, val)
         // We are done
         return;
     }
-
+    */
 
 
 

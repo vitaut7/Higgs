@@ -3231,6 +3231,8 @@ void gen_dup_capture(
     CodeBlock as
 )
 {
+    writeln("entering gen_dup_capture");
+
     auto fun = instr.block.fun;
 
     // This block should contain dup_capture only, no phi nodes
@@ -3250,6 +3252,22 @@ void gen_dup_capture(
     assert (instr.getTarget(0) !is null);
     auto endBlock = instr.getTarget(0).target;
 
+
+
+
+    writeln("this block is: ");
+    writeln(thisBlock);
+    writeln();
+
+    writeln("end block is: ");
+    writeln(endBlock);
+    writeln();
+    writeln("-----");
+    writeln();
+
+
+
+
     // Map of callee blocks to copies
     IRBlock[IRBlock] blockMap;
 
@@ -3262,6 +3280,13 @@ void gen_dup_capture(
         // If this block was already processed, stop
         if (block in blockMap)
             return;
+
+        // If this is the successor block, stop
+        if (block is endBlock)
+            return;
+
+        writeln(block);
+        writeln();
 
         // Copy the block
         auto newBlock = fun.newBlock(block.getName);
@@ -3282,8 +3307,19 @@ void gen_dup_capture(
         // Process block successors
         auto branch = block.lastInstr;
         for (size_t tIdx = 0; tIdx < branch.MAX_TARGETS; ++tIdx)
-            traverse(branch.getTarget(tIdx).target);
+        {
+            auto desc = branch.getTarget(tIdx);
+            if (desc)
+                traverse(desc.target);
+        }
     }
+
+    writeln("traversing");
+
+    // Traverse and copy the blocks in the capture structure
+    traverse(startBlock);
+
+    writeln("traversal done");
 
     // Process the copied instructions
     foreach (oldBlock, newBlock; blockMap)
@@ -3299,7 +3335,6 @@ void gen_dup_capture(
             for (size_t aIdx = 0; aIdx < oldInstr.numArgs; ++aIdx)
             {
                 auto arg = oldInstr.getArg(aIdx);
-                assert (arg in valMap || cast(IRDstValue)arg is null);
                 auto newArg = valMap.get(arg, arg);
                 newInstr.setArg(aIdx, newArg);
             }
@@ -3311,8 +3346,7 @@ void gen_dup_capture(
                 if (desc is null)
                     continue;
 
-                // FIXME: use blockMap.get, not all blocks duped
-                auto newTarget = blockMap[desc.target];
+                auto newTarget = blockMap.get(desc.target, desc.target);
                 auto newBranch = newInstr.setTarget(tIdx, newTarget);
 
                 assert (desc.args.length is 0);
@@ -3320,43 +3354,34 @@ void gen_dup_capture(
         }
     }
 
+    writeln("replacing dup_capture instruction");
+
     // Set the successor of thisBlock to the first duplicated block
     // Note: this block remains in existence, now jumps to first duplicated
     // block instead of merge block
+    // Note: we could end up with multiple block versions executing
+    // dup_capture and extending the IR. To avoid this, we replace this
+    // instruction with a direct jump
     assert (instr.getTarget(0) && instr.getTarget(0).args.length is 0);
-    /*auto newBranch =*/ instr.setTarget(0, blockMap[startBlock]);
+    //instr.setTarget(0, blockMap[startBlock]);
+    auto jumpInstr = thisBlock.addInstr(new IRInstr(&JUMP));
+    auto newDesc = jumpInstr.setTarget(0, blockMap[startBlock]);
+    thisBlock.delInstr(instr);
 
-
-
-
-
-
-
-
-
-
-
-
-
+    writeln("recomputing liveness info");
 
     // TODO: find way to incrementally update LiveInfo
     // Once IR subtree copy is done, we update the LiveInfo
     // - Can start by rerunning the whole thing, KISS at first
     fun.liveInfo = new LiveInfo(fun);
 
-
-
-
-
-
-
-
-
     // Jump directly to the successor block
     // - We're not generating any code for dup capture itself
     // - We basically hijack BBV so that the new IR gets generated
     // - dup_capture jumps or "falls through" to newly generated IR blocks
-    return gen_jump(ver, st, instr, as);
+    gen_jump(ver, st, jumpInstr, as);
+
+    writeln("leaving gen_dup_capture");
 }
 
 void gen_clear_shape(

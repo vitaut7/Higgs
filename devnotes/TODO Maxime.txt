@@ -78,6 +78,12 @@ TODO: think about shape types
   - rename __proto__ to __nullproto__ for root obj
   - use current type setup to keep this typed? or flag bits
 
+TODO: instr.getSucc(tIdx)
+TODO: rename BranchDesc.target to BranchDesc.block? or .succ?
+- .instr and .block make more sense, otherwise branch and target
+TODO: instr.getOutgoing() instead of getTarget()
+- mirrors getIncoming in block
+
 ------------------------------------------------------------------------------
 
 DLS - June 7, 2015
@@ -125,10 +131,89 @@ Meeting 2015-04-14:
     - interesting for validation, not so much for timing
 - NEXT: take a break, finish up ECOOP paper, submit camera-ready version! ***
 
+TODO: lower default maxvers back to 20?
+
 TODO: try maxtypes=N
 - Need capture_shape/tag duplication first, otherwise this will kill perf
 
-TODO: work on auto-duplicating capture_shape, Marc says ok
+TODO: implement basic meta stat test system
+- run new instance of Higgs with pipe, run microbenchmark, get result
+  - good to dogfood Higgs pipes and such
+  - need new init if we want to set --shape_noprop, specific params
+- try to design tests not to use stdlib, for speed, --nostdlib
+- we depend on lib, put it after lib tests in tests/10-meta folder
+  - start with just one file, no external lib
+  - fn to get stat counters from Higgs run with pipe
+- to test:
+  - new object, getprop with --shape_noprop has no known shapes
+    ./higgs --stats --shape_noprop --noretspec --noentryspec --nostdlib --e "o = { x:3, y:2 }"
+    - has 1 known shape, 3 tests
+  - number of shape tests, type tests for specific loop microbenchmarks
+    - can have a loop, check the number of is_int64
+  - obj lit usage patterns that should have no shape tests whatsoever
+  - init with --nostdlib should have no shape tests, no perf degradation
+
+Backup plan: inline the recursive structure
+- could possibly use eval to generate the recursive getprop/setprop structure?
+  - have to do it in D! no access to JS primitives
+- this is an ugly solution, try to go for duplication
+  - self-modifying IR is important to understand, be patient
+
+TODO: way to update LiveInfo
+- can start by trying to re-run with existing data?
+  - get that working right first
+- how do we cope with new instrs not in existing data?
+
+TODO: write/sketch explanation of typed shapes in typed shapes paper
+
+Blog post: PhD Musings - Versioning is Not Cloning
+- Short and sweet, KISS, musings
+
+TODO: move dupcapture into own folder, not dev-maxime
+
+Blog post: inline caches as self-modifying code ?
+- Recursively modifying itself
+- Lazy inlining exposed at the IR level
+- Self modifying IR
+- Link to code for dup_capture
+
+TODO: string code point issue, look into it
+https://github.com/higgsjs/Higgs/issues/184
+- Don't need to fix it necessarily, but make headway!
+
+TODO: in paper graph num shape tests with and without typed shapes
+- also column for num type tests with and without, same scale, not relative
+  - order of magnitude is similar
+TODO: paper, abridged-runbenchmarks.sh
+
+TODO: once all tests passing with objSetProp, commit
+- Do not extend to other runtime fns or begin work on liveness info immediately
+
+TODO: test dup_capture in objSetProp
+- It's OK if it doesn't work for a while!
+- Try debugging on tiny inline examples, --nostdlib
+
+
+
+
+
+
+
+
+
+[DONE] FIXME: higgs init fails due to dup_capture
+- gen_dup_capture causes segfault
+
+[DONE] FIXME: optimizing jump to a jump
+  if_false(7B6):
+    dup_capture => call_cont(818)
+  call_cont(818):
+    jump => if_join(7B7)
+- This kind of optimization seems like it should be valid for any branch
+  - Change this on master, generalize to any branch to a jump block
+- problem is that dup_capture is not marked as a branch instruction, just a call
+
+[DONE] TODO: work on auto-duplicating capture_shape, Marc says ok
 - Issue: probably want same duplication mechanism for capture_tag
   - Want to duplicate *whole subgraph* inside true branch, and instruction itself
     - Everything but the false subtree? Everything but after the join?
@@ -169,78 +254,6 @@ TODO: work on auto-duplicating capture_shape, Marc says ok
 
         $ir_duplicate();
     }
-
-TODO: string code point issue, look into it
-https://github.com/higgsjs/Higgs/issues/184
-- Don't need to fix it necessarily, but make headway!
-
-TODO: implement basic meta stat test system
-- run new instance of Higgs with pipe, run microbenchmark, get result
-  - good to dogfood Higgs pipes and such
-  - need new init if we want to set --shape_noprop, specific params
-- try to design tests not to use stdlib, for speed, --nostdlib
-- we depend on lib, put it after lib tests in tests/10-meta folder
-  - start with just one file, no external lib
-  - fn to get stat counters from Higgs run with pipe
-- to test:
-  - new object, getprop with --shape_noprop has no known shapes
-    ./higgs --stats --shape_noprop --noretspec --noentryspec --nostdlib --e "o = { x:3, y:2 }"
-    - has 1 known shape, 3 tests
-  - number of shape tests, type tests for specific loop microbenchmarks
-    - can have a loop, check the number of is_int64
-  - obj lit usage patterns that should have no shape tests whatsoever
-  - init with --nostdlib should have no shape tests, no perf degradation
-
-Backup plan: inline the recursive structure
-- could possibly use eval to generate the recursive getprop/setprop structure?
-  - have to do it in D! no access to JS primitives
-- this is an ugly solution, try to go for duplication
-  - self-modifying IR is important to understand, be patient
-
-TODO: way to update LiveInfo
-- can start by trying to re-run with existing data?
-  - get that working right first
-- how do we cope with new instrs not in existing data?
-
-TODO: write/sketch explanation of typed shapes in typed shapes paper
-
-TODO: test dup_capture in objSetProp
-- It's OK if it doesn't work for a while!
-
-Blog post: PhD Musings - Versioning is Not Cloning
-- Short and sweet, KISS, musings
-
-TODO: in paper graph num shape tests with and without typed shapes
-- also column for num type tests with and without, same scale, not relative
-  - order of magnitude is similar
-
-TODO: move dupcapture into own folder, not dev-maxime
-
-TODO: limited IR subgraph copy mechanism for auto-duplicating capture instrs
-- Start from an $ir_dup_capture() IR instruction
-  - needs to identify its surroundings
-    - it's on the else branch
-    - find predecessor, if-test, where duplication starts
-    - find successor, this is the merge, where duplication stops
-    - identify all nodes in subtree to be copied
-- Once IR subtree copy is done, we update the liveness info
-  - Can start by rerunning the whole thing, KISS at first
-- All of this happens while we're compiling $ir_dup_capture
-  - We're not generating any code for dup capture itself
-  - We basically hijack things so that the new IR gets compiled right after?
-  - dup_capture jumps or "falls through" to newly generated IR blocks
-
-
-
-
-
-
-
-
-
-
-
-
 
 [DONE] TODO: capture_shape_2 has control flow directions inverted
 
