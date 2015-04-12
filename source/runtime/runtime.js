@@ -2673,7 +2673,7 @@ function $rt_objSetProp(obj, propStr, val)
     else
     {
         // Duplicate/extend the shape capture structure
-        $ir_dup_capture();
+        $ir_dup_capture(obj, shapeIdx, propStr, val);
     }
 
 

@@ -292,20 +292,13 @@ Opcode CAPTURE_TAG = { "capture_tag", false, [OpArg.LOCAL], &gen_capture_tag, Op
 /// Capture the shape of a given object
 Opcode CAPTURE_SHAPE = { "capture_shape", false, [OpArg.LOCAL, OpArg.LOCAL], &gen_capture_shape, OpInfo.BRANCH };
 
-
-
-
 /// Capture the shape of a given object
 Opcode CAPTURE_SHAPE_2 = { "capture_shape_2", false, [OpArg.LOCAL, OpArg.LOCAL], &gen_capture_shape_2, OpInfo.BRANCH };
 
 /// Duplicate/extend the capture_shape or capture_tag structure
-Opcode DUP_CAPTURE = { "dup_capture", false, [], &gen_dup_capture, OpInfo.MAY_GC | OpInfo.IMPURE | OpInfo.BRANCH | OpInfo.CALL };
-
-
-
-
-
-
+/// Note: arguments passed are not use by dup_capture,
+///       but serve to mark the input values as live
+Opcode DUP_CAPTURE = { "dup_capture", false, [], &gen_dup_capture, OpInfo.VAR_ARG | OpInfo.MAY_GC | OpInfo.BRANCH | OpInfo.CALL };
 
 /// Clear the shape of a given object
 Opcode CLEAR_SHAPE = { "clear_shape", false, [OpArg.LOCAL], &gen_clear_shape, OpInfo.IMPURE };

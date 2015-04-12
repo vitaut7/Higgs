@@ -177,10 +177,6 @@ Blog post: inline caches as self-modifying code ?
 - Self modifying IR
 - Link to code for dup_capture
 
-TODO: string code point issue, look into it
-https://github.com/higgsjs/Higgs/issues/184
-- Don't need to fix it necessarily, but make headway!
-
 TODO: in paper graph num shape tests with and without typed shapes
 - also column for num type tests with and without, same scale, not relative
   - order of magnitude is similar
@@ -193,6 +189,34 @@ TODO: test dup_capture in objSetProp
 - It's OK if it doesn't work for a while!
 - Try debugging on tiny inline examples, --nostdlib
 
+TODO: string code point issue, look into it
+https://github.com/higgsjs/Higgs/issues/184
+- Don't need to fix it necessarily, but make headway!
+*** look on master
+
+FIXME: gc issue with dup_capture
+- possibly due to tags being previously written?
+Running: ./tests/08-ostrich/bfs.js...
+entering gcCollect
+leaving gcCollect
+entering gcCollect
+leaving gcCollect
+entering gcCollect
+leaving gcCollect
+entering gcCollect
+leaving gcCollect
+heap space exhausted, expanding heap to 32MiB
+entering gcCollect
+resizing to-space heap
+leaving gcCollect
+Assertion failed (runtime/gc.d@229)
+Caught segmentation fault
+IP=null
+vm.curInstr: $5 = alloc_object 96
+exiting
+***** FAILED! *****
+
+commit
 
 
 
@@ -200,6 +224,22 @@ TODO: test dup_capture in objSetProp
 
 
 
+
+
+
+
+
+
+[DONE] FIXME: issue with many globals and dup_capture
+leaving gen_dup_capture
+Assertion failed (jit/jit.d@509): value not in succ valMap: $1 = read_shape_idx $18
+- did we somehow duplicate read_shape_idx?
+- which successor are we having issues with anyways?
+- Log which block the value is not live in?
+  - The now-modified dup_capture block that has been executed
+- Maybe it's because the read shape idx wasn't marked live before!
+  - dup_capture should use the live values
+  - obj, shape idx, property name, value
 
 [DONE] FIXME: higgs init fails due to dup_capture
 - gen_dup_capture causes segfault

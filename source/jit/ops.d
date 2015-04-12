@@ -3382,6 +3382,11 @@ void gen_dup_capture(
     gen_jump(ver, st, jumpInstr, as);
 
     writeln("leaving gen_dup_capture");
+
+
+    writeln(thisBlock.fun);
+
+
 }
 
 void gen_clear_shape(

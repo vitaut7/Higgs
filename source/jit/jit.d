@@ -508,7 +508,9 @@ class CodeGenState
             {
                 assert (
                     value in succ.valMap,
-                    "value not in succ valMap: " ~ value.toString
+                    "in state diff, value:\n" ~
+                    value.toString ~ "\n" ~
+                    "not in successor valMap"
                 );
             }
         }
@@ -1993,6 +1995,8 @@ BlockVersion getBlockVersion(
     CodeGenState state
 )
 {
+    //writeln("getBlockVersion of ", block.getName);
+
     auto fun = state.fun;
 
     // Get the list of versions for this block
