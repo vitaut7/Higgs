@@ -2147,39 +2147,37 @@ Get a property from an object using a string as key
 */
 function $rt_objGetProp(obj, propStr)
 {
-    // Capture the object shape
+    // Read the object shape
     var shapeIdx = $ir_read_shape_idx(obj);
     if ($ir_break());
-    if ($ir_capture_shape(obj, shapeIdx))
-    if ($ir_capture_shape(obj, shapeIdx))
-    if ($ir_capture_shape(obj, shapeIdx))
-    if ($ir_capture_shape(obj, shapeIdx))
-    if ($ir_capture_shape(obj, shapeIdx))
-    if ($ir_capture_shape(obj, shapeIdx))
-    if ($ir_capture_shape(obj, shapeIdx))
-    if ($ir_capture_shape(obj, shapeIdx))
-    if ($ir_capture_shape(obj, shapeIdx))
-    if ($ir_capture_shape(obj, shapeIdx))
-    if ($ir_capture_shape(obj, shapeIdx))
-    if ($ir_capture_shape(obj, shapeIdx))
-    if ($ir_capture_shape(obj, shapeIdx))
-    if ($ir_capture_shape(obj, shapeIdx))
-    if ($ir_capture_shape(obj, shapeIdx))
-    if ($ir_capture_shape(obj, shapeIdx));
 
-    // If the property value can be read directly
-    var propVal;
-    if (propVal = $ir_obj_get_prop(obj, propStr))
+    // Capture the object shape
+    if ($ir_capture_shape_2(obj, shapeIdx))
     {
-        // If shapes are not to be propagated, clear shape information
-        $ir_clear_shape(obj);
+        // If the property value can be read directly
+        var propVal;
+        if (propVal = $ir_obj_get_prop(obj, propStr))
+        {
+            // If shapes are not to be propagated, clear shape information
+            $ir_clear_shape(obj);
 
-        // Return the property value
-        return propVal;
+            // Return the property value
+            return propVal;
+        }
+    }
+    else
+    {
+        // Duplicate/extend the shape capture structure
+        $ir_dup_capture(obj, shapeIdx, propStr);
     }
 
     // If shapes are not to be propagated, clear shape information
     $ir_clear_shape(obj);
+
+
+
+
+
 
     // Otherwise, if the property is a getter-setter function
     if ($ir_is_object(propVal))
@@ -2638,11 +2636,6 @@ Set a property on an object using a string as key
 */
 function $rt_objSetProp(obj, propStr, val)
 {
-
-
-
-
-
     // Read the object shape
     var shapeIdx = $ir_read_shape_idx(obj);
     if ($ir_break());
@@ -2675,79 +2668,6 @@ function $rt_objSetProp(obj, propStr, val)
         // Duplicate/extend the shape capture structure
         $ir_dup_capture(obj, shapeIdx, propStr, val);
     }
-
-
-
-
-
-
-
-
-
-    /*
-    // Read the object shape
-    var shapeIdx = $ir_read_shape_idx(obj);
-    if ($ir_break());
-
-    // Capture the object shape
-    if ($ir_capture_shape(obj, shapeIdx))
-    if ($ir_capture_shape(obj, shapeIdx))
-    if ($ir_capture_shape(obj, shapeIdx))
-    if ($ir_capture_shape(obj, shapeIdx))
-    if ($ir_capture_shape(obj, shapeIdx))
-    if ($ir_capture_shape(obj, shapeIdx))
-    if ($ir_capture_shape(obj, shapeIdx))
-    if ($ir_capture_shape(obj, shapeIdx))
-    if ($ir_capture_shape(obj, shapeIdx))
-    if ($ir_capture_shape(obj, shapeIdx))
-    if ($ir_capture_shape(obj, shapeIdx))
-    if ($ir_capture_shape(obj, shapeIdx))
-    if ($ir_capture_shape(obj, shapeIdx))
-    if ($ir_capture_shape(obj, shapeIdx))
-    if ($ir_capture_shape(obj, shapeIdx))
-    if ($ir_capture_shape(obj, shapeIdx));
-
-    // Capture the type tag of the value
-    if ($ir_break());
-    if ($ir_capture_tag(val))
-    if ($ir_capture_tag(val))
-    if ($ir_capture_tag(val))
-    if ($ir_capture_tag(val))
-    if ($ir_capture_tag(val))
-    if ($ir_capture_tag(val))
-    if ($ir_capture_tag(val))
-    if ($ir_capture_tag(val))
-    if ($ir_capture_tag(val))
-    if ($ir_capture_tag(val))
-    if ($ir_capture_tag(val))
-    if ($ir_capture_tag(val))
-    if ($ir_capture_tag(val))
-    if ($ir_capture_tag(val))
-    if ($ir_capture_tag(val))
-    if ($ir_capture_tag(val));
-
-    // If the property value can be set directly
-    if ($ir_obj_set_prop(obj, propStr, val))
-    {
-        // If shapes are not to be propagated, clear shape information
-        $ir_clear_shape(obj);
-
-        // We are done
-        return;
-    }
-    */
-
-
-
-
-
-
-
-
-
-
-
-
 
     // If shapes are not to be propagated, clear shape information
     $ir_clear_shape(obj);

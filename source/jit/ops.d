@@ -3252,9 +3252,7 @@ void gen_dup_capture(
     assert (instr.getTarget(0) !is null);
     auto endBlock = instr.getTarget(0).target;
 
-
-
-
+    /*
     writeln("this block is: ");
     writeln(thisBlock);
     writeln();
@@ -3264,9 +3262,7 @@ void gen_dup_capture(
     writeln();
     writeln("-----");
     writeln();
-
-
-
+    */
 
     // Map of callee blocks to copies
     IRBlock[IRBlock] blockMap;
@@ -3285,8 +3281,10 @@ void gen_dup_capture(
         if (block is endBlock)
             return;
 
+        /*
         writeln(block);
         writeln();
+        */
 
         // Copy the block
         auto newBlock = fun.newBlock(block.getName);
@@ -3349,7 +3347,25 @@ void gen_dup_capture(
                 auto newTarget = blockMap.get(desc.target, desc.target);
                 auto newBranch = newInstr.setTarget(tIdx, newTarget);
 
-                assert (desc.args.length is 0);
+                // In the case of get_prop, the object value is selected
+                // by a phi node in the endBlock
+                assert (
+                    (desc.args.length is 0) ||
+                    (desc.args.length is 1 && desc.target is endBlock)
+                );
+
+                // If this is a branch to the end block (non-duplicated)
+                if (desc.target is endBlock)
+                {
+                    auto endPhi = endBlock.firstPhi;
+
+                    foreach (arg; desc.args)
+                    {
+                        auto newArg = valMap.get(arg.value, arg.value);
+                        assert (newArg !is null);
+                        newBranch.setPhiArg(endPhi, newArg);
+                    }
+                }
             }
         }
     }
@@ -3362,8 +3378,7 @@ void gen_dup_capture(
     // Note: we could end up with multiple block versions executing
     // dup_capture and extending the IR. To avoid this, we replace this
     // instruction with a direct jump
-    assert (instr.getTarget(0) && instr.getTarget(0).args.length is 0);
-    //instr.setTarget(0, blockMap[startBlock]);
+    assert (instr.getTarget(0));
     auto jumpInstr = thisBlock.addInstr(new IRInstr(&JUMP));
     auto newDesc = jumpInstr.setTarget(0, blockMap[startBlock]);
     thisBlock.delInstr(instr);
@@ -3383,10 +3398,7 @@ void gen_dup_capture(
 
     writeln("leaving gen_dup_capture");
 
-
-    writeln(thisBlock.fun);
-
-
+    //writeln(thisBlock.fun);
 }
 
 void gen_clear_shape(

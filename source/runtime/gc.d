@@ -212,6 +212,9 @@ refptr heapAlloc(VM vm, size_t size)
 
         auto allocSize = vm.allocPtr - vm.heapStart;
 
+        //writeln("allocSize=", allocSize);
+        //writeln(" heapSize=", vm.heapLimit - vm.heapStart);
+
         // While this allocation exceeds the heap limit
         while (vm.allocPtr + size > vm.heapLimit)
         {
@@ -226,7 +229,12 @@ refptr heapAlloc(VM vm, size_t size)
             // Double the size of the heap
             gcCollect(vm, newHeapSize);
 
-            assert (allocSize == vm.allocPtr - vm.heapStart);
+            //writeln("allocSize=", (vm.allocPtr - vm.heapStart));
+
+            assert (
+                allocSize == vm.allocPtr - vm.heapStart,
+                "alloc ptr displaced after GC heap expansion"
+            );
         }
     }
 
