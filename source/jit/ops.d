@@ -3231,7 +3231,19 @@ void gen_dup_capture(
     CodeBlock as
 )
 {
+    /// Compute the depth of the capture chain
+    size_t getDepth(IRBlock block)
+    {
+        if (block.numIncoming != 1)
+            return 0;
+
+        auto predBranch = block.getIncoming(0).branch;
+
+        return getDepth(predBranch.block) + 1;
+    }
+
     writeln("entering gen_dup_capture");
+    writeln("depth=", getDepth(instr.block));
 
     auto fun = instr.block.fun;
 
