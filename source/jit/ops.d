@@ -3264,9 +3264,15 @@ void gen_dup_capture(
     assert (instr.getTarget(0) !is null);
     auto endBlock = instr.getTarget(0).target;
 
-    /*
+    
     writeln("this block is: ");
     writeln(thisBlock);
+    writeln();
+
+    writeln("start block is: ");
+    writeln(startBlock);
+    writeln();
+    writeln("-----");
     writeln();
 
     writeln("end block is: ");
@@ -3274,7 +3280,7 @@ void gen_dup_capture(
     writeln();
     writeln("-----");
     writeln();
-    */
+    
 
     // Map of callee blocks to copies
     IRBlock[IRBlock] blockMap;
@@ -3293,10 +3299,10 @@ void gen_dup_capture(
         if (block is endBlock)
             return;
 
-        /*
+        
         writeln(block);
         writeln();
-        */
+        
 
         // Copy the block
         auto newBlock = fun.newBlock(block.getName);

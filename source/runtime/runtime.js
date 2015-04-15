@@ -2174,11 +2174,6 @@ function $rt_objGetProp(obj, propStr)
     // If shapes are not to be propagated, clear shape information
     $ir_clear_shape(obj);
 
-
-
-
-
-
     // Otherwise, if the property is a getter-setter function
     if ($ir_is_object(propVal))
     {
@@ -2349,39 +2344,43 @@ function $rt_getPropField(base, propStr)
         // shape is found for phi node inside loop but not propagated for
         // the object value flowing into the phi node
 
-        // Capture the object shape
+
+
+
+
+        // Read the object shape
         var shapeIdx = $ir_read_shape_idx(obj);
         if ($ir_break());
-        if ($ir_capture_shape(obj, shapeIdx))
-        if ($ir_capture_shape(obj, shapeIdx))
-        if ($ir_capture_shape(obj, shapeIdx))
-        if ($ir_capture_shape(obj, shapeIdx))
-        if ($ir_capture_shape(obj, shapeIdx))
-        if ($ir_capture_shape(obj, shapeIdx))
-        if ($ir_capture_shape(obj, shapeIdx))
-        if ($ir_capture_shape(obj, shapeIdx))
-        if ($ir_capture_shape(obj, shapeIdx))
-        if ($ir_capture_shape(obj, shapeIdx))
-        if ($ir_capture_shape(obj, shapeIdx))
-        if ($ir_capture_shape(obj, shapeIdx))
-        if ($ir_capture_shape(obj, shapeIdx))
-        if ($ir_capture_shape(obj, shapeIdx))
-        if ($ir_capture_shape(obj, shapeIdx))
-        if ($ir_capture_shape(obj, shapeIdx));
 
-        // If the property value can be read directly
-        var propVal;
-        if (propVal = $ir_obj_get_prop(obj, propStr))
+        // Capture the object shape
+        if ($ir_capture_shape_2(obj, shapeIdx))
         {
-            // If shapes are not to be propagated, clear shape information
-            $ir_clear_shape(obj);
+            // If the property value can be read directly
+            var propVal;
+            if (propVal = $ir_obj_get_prop(obj, propStr))
+            {
+                // If shapes are not to be propagated, clear shape information
+                $ir_clear_shape(obj);
 
-            // Return the property value
-            return propVal;
+                // Return the property value
+                return propVal;
+            }
+        }
+        else
+        {
+            // Duplicate/extend the shape capture structure
+            $ir_dup_capture(obj, shapeIdx, propStr);
         }
 
         // If shapes are not to be propagated, clear shape information
         $ir_clear_shape(obj);
+
+
+
+
+
+
+
 
         // If the property is a getter-setter
         if ($ir_is_object(propVal))
